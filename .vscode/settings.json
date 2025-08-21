@@ -11,6 +11,7 @@
         "pyvisa",
         "rigol",
         "SCAL",
+        "SCPI",
         "semilogx",
         "TCPIP",
         "xscale"
