@@ -12,21 +12,6 @@ schema.sql
 setenv
 *.pem
 rem
-Deploy.zip
-ImagesLayer.zip
-lambda_layer_pillow.zip
-data/*
-histdata/*
-histdata2/*
-histdata-bak/*
-chromedriver
-chromedriver_106
-temp.txt
-
-# NOTE: we're not using node currently, so ignore these. I'm using NPM to load other things.
-node_modules/
-package.json
-package-lock.json
 
 # C extensions
 *.so
@@ -125,7 +110,6 @@ celerybeat-schedule
 celerybeat.pid
 
 # Generated files
-images/
 test/
 package/
 opt/
