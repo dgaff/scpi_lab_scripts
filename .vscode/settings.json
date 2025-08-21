@@ -10,6 +10,7 @@
         "PHAS",
         "pyvisa",
         "rigol",
+        "SCAL",
         "semilogx",
         "TCPIP",
         "xscale"
