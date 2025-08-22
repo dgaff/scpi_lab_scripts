@@ -16,7 +16,7 @@ Current equipment list supported:
 
 ## Bode Plots
 
-capture.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and it's Bode Plot.
+bode.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and it's Bode Plot.
 
 ![](images/actual_circuit.png)
 
