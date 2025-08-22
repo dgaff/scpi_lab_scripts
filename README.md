@@ -1,4 +1,4 @@
-# Bode Plot and other useful SCPI scripts
+# SCPI Scripts and Tools
 
 This repo is for various instrument control scripts for my SCPI-compatible electronics lab equipment. SCPI stands for [Standard Commands for Programmable Instruments](https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments). It's pronounced "skippy" apparently, and it goes back to 1990. Back when I was at Virginia Tech, I was responsible for maintaining and enhancing the lab software that controlled the instruments in the electronics lab. The interface back then was GPIB, which was a thick cable with many pins. Now we get to use Ethernet, thankfully.
 
@@ -14,8 +14,18 @@ Current equipment list supported:
 
     Power Supply: Keysight E36234A
 
-There are some instrument detection and test functions included. But the primary function is to produce Bode Plots. Here's an example of a Common Emitter BJT amplifier circuit and it's Bode Plot.
+## Bode Plots
+
+capture.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and it's Bode Plot.
 
 ![](images/actual_circuit.png)
 
 ![](images/actual_bode.png)
+
+## Waveform Generation
+
+waveform_generator.py allows you to generate a variaty of waveforms, including drawing an arbitrary one. It's still a work in progress.
+
+arb_waveform.py uploads a waveform to the waveform generator. It's currently untested.
+
+![](images/arb_waveform.png)
