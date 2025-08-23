@@ -29,3 +29,9 @@ waveform_generator.py allows you to generate a variaty of waveforms, including d
 arb_waveform.py uploads a waveform to the waveform generator. It's currently untested.
 
 ![](images/arb_waveform.png)
+
+## ADSR Sine Wave Envelope
+
+adsr_sine.py is a cool script for generating an ADSR envelope for a sine wave at a particular frequency. This can be useful to generating an interesting synth-like sound from a function generator for an audio test. There are a lot of command line options for this script, so check out the code.
+
+![](images/adsr.png)
