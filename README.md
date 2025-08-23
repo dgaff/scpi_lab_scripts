@@ -1,6 +1,6 @@
 # SCPI Scripts and Tools
 
-This repo is for various instrument control scripts for my SCPI-compatible electronics lab equipment. SCPI stands for [Standard Commands for Programmable Instruments](https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments). It's pronounced "skippy" apparently, and it goes back to 1990. Back when I was at Virginia Tech in the early 90s, I was responsible for maintaining and enhancing the lab software that controlled the instruments in the electronics lab. I suspect it was SCPI back then too, but the physical interface was GPIB/HP-IB, which was a thick parallel cable with many pins. Now we get to use Ethernet, thankfully.
+This repo is for various instrument control scripts for my SCPI-compatible electronics lab equipment. SCPI stands for [Standard Commands for Programmable Instruments](https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments). It's pronounced "skippy" apparently, and it goes back to 1990. Back when I was at Virginia Tech in the early 90s, I had a job with the EE department to maintain and enhance the lab software that controlled the instruments in the electronics labs. I'm pretty sure that software used SCPI back then, but I don't remember for sure. The big difference was that the physical interface for the hardware was GPIB/HPIB, which was a thick parallel cable with many pins. Modern devices now have Ethernet connections, thankfully. But, you can still get a GPIB interface add-on to Keysight devices, so I guess some labs still use it.
 
 ![](images/scpi_lab_equipment.jpeg)
 
@@ -16,7 +16,7 @@ Current equipment list supported:
 
 ## Bode Plots
 
-bode.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and it's Bode Plot.
+bode.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and its Bode Plot.
 
 ![](images/actual_circuit.png)
 
