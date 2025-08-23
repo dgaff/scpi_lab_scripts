@@ -26,7 +26,7 @@ bode.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifie
 
 waveform_generator.py allows you to generate a variaty of waveforms, including drawing an arbitrary one. It's still a work in progress.
 
-arb_waveform.py uploads a waveform to the waveform generator. It's currently untested.
+arb_waveform.py uploads a custom waveform to the Keysight waveform generator. It's currently untested.
 
 ![](images/arb_waveform.png)
 
