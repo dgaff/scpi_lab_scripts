@@ -12,6 +12,8 @@ schema.sql
 setenv
 *.pem
 rem
+tone.csv
+tone.wav
 
 # C extensions
 *.so
