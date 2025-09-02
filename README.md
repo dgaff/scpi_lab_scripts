@@ -16,11 +16,13 @@ Current equipment list supported:
 
 ## Bode Plots
 
-bode.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and its Bode Plot.
+bode.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and its Bode Plot. 
 
 ![](images/actual_circuit.png)
 
 ![](images/actual_bode.png)
+
+And FYI, make sure you use the 10x mode on your oscope probe. Here's an [EEVblog video](https://www.youtube.com/watch?v=OiAmER1OJh4&ab_channel=EEVblog) explaining why 1x mode has reduced bandwidth.
 
 ## Waveform Generation
 
