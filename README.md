@@ -26,7 +26,7 @@ And FYI, make sure you use the 10x mode on your oscope probe. Here's an [EEVblog
 
 ## Waveform Generation
 
-waveform_generator.py allows you to generate a variaty of waveforms, including drawing an arbitrary one. It's still a work in progress.
+waveform_generator.py allows you to generate a variety of waveforms, including drawing an arbitrary one. It's still a work in progress.
 
 arb_waveform.py uploads a custom waveform to the Keysight waveform generator. It's currently untested.
 
