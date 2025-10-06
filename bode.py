@@ -3,56 +3,121 @@ import pyvisa
 import numpy as np
 import matplotlib.pyplot as plt
 
-POWER_SUPPLY_ADDRESS = 'TCPIP::192.168.1.245::INSTR'
-WAVEFORM_GENERATOR_ADDRESS = 'TCPIP::192.168.1.89::INSTR'
-OSCILLOSCOPE_ADDRESS = 'TCPIP::192.168.1.235::INSTR'
-DMM_ADDRESS = 'TCPIP::192.168.1.88::INSTR'
+POWER_SUPPLY_ADDRESS = 'TCPIP::192.168.1.122::INSTR'
+# POWER_SUPPLY_ADDRESS = 'TCPIP::192.168.1.122::5025::SOCKET'
+WAVEFORM_GENERATOR_ADDRESS = 'TCPIP::192.168.1.227::INSTR'
+RIGOL_OSCILLOSCOPE_ADDRESS = 'TCPIP::192.168.1.226::INSTR'
+SIGLENT_OSCILLOSCOPE_ADDRESS = 'TCPIP::192.168.1.22::INSTR'
+# SIGLENT_OSCILLOSCOPE_ADDRESS = 'TCPIP::192.168.1.22::5025::SOCKET'
+DMM_ADDRESS = 'TCPIP::192.168.1.248::INSTR'
 
 '''
     My setup. The HISLIP adapter is apparently a high-speed interface layer for VISA. I haven't used it yet.
-
-    ('TCPIP::192.168.1.88::INSTR', 'TCPIP::192.168.1.89::INSTR', 'TCPIP::192.168.1.235::INSTR', 
-    'TCPIP::192.168.1.245::INSTR', 'TCPIP::192.168.1.88::hislip0,4880::INSTR')
-
     (Note: S/N removed from output)
 
-    DMM:
-    Connected to TCPIP::192.168.1.88::INSTR: Keysight Technologies,34470A,   ,A.03.03-03.15-03.03-00.52-05-02
-
-    Waveform Generator:
-    Connected to TCPIP::192.168.1.89::INSTR: Agilent Technologies,33511B,    ,5.03-3.15-2.00-58-00
-
-    Oscilloscope:
-    Connected to TCPIP::192.168.1.235::INSTR: RIGOL TECHNOLOGIES,DS1104Z,    ,00.04.05.SP2
+    ('TCPIP::192.168.1.22::INSTR', 'TCPIP::192.168.1.122::INSTR', 'TCPIP::192.168.1.226::INSTR', 
+    'TCPIP::192.168.1.227::INSTR', 'TCPIP::192.168.1.248::INSTR', 'TCPIP::192.168.1.248::hislip0,4880::INSTR')
+    
+    Siglent Scope:
+    Connected to TCPIP::192.168.1.22::INSTR: Siglent Technologies,SDS3054X HD,  ,4.8.9.1.0.3.9
 
     Power Supply:
-    Connected to TCPIP::192.168.1.245::INSTR: Keysight Technologies,E36234A,    ,1.0.6-1.0.3-1.01
+    Connected to TCPIP::192.168.1.122::INSTR: Keysight Technologies,E36234A,  ,1.0.6-1.0.3-1.01
+
+    Rigol Scope:
+    Connected to TCPIP::192.168.1.226::INSTR: RIGOL TECHNOLOGIES,DS1104Z,  ,00.04.05.SP2
+
+    Waveform Generator:
+    Connected to TCPIP::192.168.1.227::INSTR: Agilent Technologies,33511B,  ,5.03-3.15-2.00-58-00
+
+    DMM:
+    Connected to TCPIP::192.168.1.248::INSTR: Keysight Technologies,34470A,  ,A.03.03-03.15-03.03-00.52-05-02
 
     HISLIP Adapter for DMM:
-    Connected to TCPIP::192.168.1.88::hislip0,4880::INSTR: Keysight Technologies,34470A,    ,A.03.03-03.15-03.03-00.52-05-02
+    Connected to TCPIP::192.168.1.248::hislip0,4880::INSTR: Keysight Technologies,34470A,  ,A.03.03-03.15-03.03-00.52-05-02
+    
 '''
 
 def list_instruments():
+    '''
+    This function lists all connected instruments and attempts to connect to them using two different VISA backends.
 
-    rm = pyvisa.ResourceManager()
+    When I upgraded to macOS Tahoe, the py VISA backend stopped connecting correctly to some devices. I had to install 
+    the NI-VISA library and use that backend to connect to the devices. However, the NI-VISA backend doesn't correctly 
+    enumerate the devices, so I use the py backend to list the devices and then connect to them using the NI-VISA backend. 
+    The NI-VISA backend is also a couple of years old now, which is a bit concerning. The last update adapted the backend
+    to Apple Silicon. I think there are bugs in both py and ni backends with enumeration, but this works for now.
 
-    # Scan for instruments
-    print(rm.list_resources())
+    Some devices also support the direct SOCKET connection, but it's not advertised by the py backend or the NI-VISA backend.
+    A socket connection looks like this: 'TCPIP0::192.168.1.122::5025::SOCKET' There's some code to extract the IPs in case
+    I want to use a socket connection.
 
-    for instrument in rm.list_resources():
+    Finally, the list_resources() function will also list local serial and USB devices, regardless of whether they are
+    actually instruments. So those are filtered out by looking for 'INSTR' in the resource string.
+    '''
+    
+    rm_py = pyvisa.ResourceManager('@py')
+    print(rm_py.list_resources('TCPIP?'))
+
+    # This code is for trying SOCKET connections.
+    # ips = []
+    # for r in rm_py.list_resources('TCPIP?*::INSTR'):
+    #     ips.append(r.split('::')[1])
+    # print("Found IPs:", ips)
+
+    # The NI-VISA backend is called "ivi" rather than "ni" on macOS for some reason. It can also be referenced directly.
+    # rm_ni = pyvisa.ResourceManager('/Library/Frameworks/VISA.framework/VISA')
+    rm_ni = pyvisa.ResourceManager('@ivi')
+
+    for instrument in rm_py.list_resources('TCPIP?'):
         try:
-            resource = rm.open_resource(instrument)
+            resource = rm_ni.open_resource(instrument)
             print(f"Connected to {instrument}: {resource.query('*IDN?')}")
         except pyvisa.VisaIOError as e:
             print(f"Could not connect to {instrument}: {e}")
+
+    # This code is for trying SOCKET connections.
+    # for ip in ips:
+    #     rsrc = f'TCPIP0::{ip}::5025::SOCKET'
+    #     inst = rm_ni.open_resource(rsrc)
+    #     inst.write_termination = '\n'; inst.read_termination = '\n'
+    #     print(inst.query('*IDN?').strip())
+
+    # This code is for checking the various types of VISA connections.
+    # rm = pyvisa.ResourceManager('/Library/Frameworks/VISA.framework/VISA')
+    # print("VISA lib:", rm.visalib)
+    # print("GEN  :", rm.list_resources('?*'))
+    # print("INSTR:", rm.list_resources('TCPIP?*::INSTR'))
+    # print("SOCK :", rm.list_resources('TCPIP*::5025::SOCKET'))   # pattern with port
+    # print("SOCK2:", rm.list_resources('TCPIP?*::SOCKET'))
+
+    # This code is required when using the SOCKET connection, but not with the INSTR connection.
+    # resource = rm.open_resource(POWER_SUPPLY_ADDRESS)
+    # resource.read_termination = '\n'
+    # resource.write_termination = '\n'
+    # resource.timeout = 5000
     
 '''
     Helpful SCPI commands for the instruments.
 '''
 
+def sample_siglent_commands():
+
+    rm = pyvisa.ResourceManager('@ivi')
+
+    my_instrument = rm.open_resource(SIGLENT_OSCILLOSCOPE_ADDRESS)
+    # my_instrument.timeout = 5000
+    print(my_instrument.query('*IDN?'))
+    print(my_instrument.query('C1:PAVA? PKPK'))
+    my_instrument.write('C1:CPL A1M')
+    my_instrument.write('C1:VDIV 0.5V')
+    my_instrument.write('C1:TRIG_LEVEL 0.0V')
+    vpp = my_instrument.query('C1:PAVA? PKPK')
+    print(f'Vpp Measurement: {vpp} V')
+
 def sample_instrument_commands():
 
-    rm = pyvisa.ResourceManager()
+    rm = pyvisa.ResourceManager('@ivi')
 
     #
     # Sample setting of voltage on the power supply
@@ -117,10 +182,10 @@ def sample_instrument_commands():
     my_instrument.close()
 
     #
-    # Sample reading waveform data from the oscilloscope
+    # Sample reading waveform data from the Rigol oscilloscope
     #
 
-    my_instrument = rm.open_resource(OSCILLOSCOPE_ADDRESS)  
+    my_instrument = rm.open_resource(RIGOL_OSCILLOSCOPE_ADDRESS)  
     print(my_instrument.query('*IDN?'))
 
     # # Set oscilloscope to acquire waveform data
@@ -162,6 +227,8 @@ Generate a Bode plot by sweeping frequency and measuring Vpp at each frequency.
 
 Note that the Rigol can sometimes produce weird Vpp measurements. There is retry logic in the code to help mitigate this.
 
+I have code for Rigol and Siglent scopes here. Note that I'm _not_ using Siglent's Tek compatibility mode.
+
 '''
 
 def bode_plot():
@@ -170,17 +237,18 @@ def bode_plot():
     # NOTE: I wasn't closing the resource manager. Trying that to see if that fixes the issue.
 
     # Connect to the instruments
-    dmm = rm.open_resource(DMM_ADDRESS)  # Digital Multimeter
+    # dmm = rm.open_resource(DMM_ADDRESS)  # Digital Multimeter
     pwr = rm.open_resource(POWER_SUPPLY_ADDRESS)  # Power Supply
     wfg = rm.open_resource(WAVEFORM_GENERATOR_ADDRESS)  # Waveform Generator
-    osc = rm.open_resource(OSCILLOSCOPE_ADDRESS)  # Oscilloscope
+    # osc = rm.open_resource(RIGOL_OSCILLOSCOPE_ADDRESS)  # Rigol Oscilloscope
+    osc = rm.open_resource(SIGLENT_OSCILLOSCOPE_ADDRESS)  # Siglent Oscilloscope
 
     # Circuit and test equipment setup
     supply_voltage = 5.0         # Set the power supply voltage
     supply_current_limit = 1.0   # Set the power supply current limit
     vpp_input = 0.01             # Input voltage peak-to-peak for the waveform generator
     start_freq = 10              # Starting frequency in Hz. Note: if you start at 1Hz, acquisition is very slow.
-    end_freq = 10000000          # Ending frequency in Hz (20 MHz is the max for the 33511B)
+    end_freq = 10000000          # Ending frequency in Hz (20 MHz is the max for the 33511B. 30Mhz with SW upgrade.)
     points_per_decade = 10       # Number of points to measure per decade
     error_check_max_gain = 1000  # Maximum gain to check for errors in the Vpp measurement
     scope_v_per_div = 0.5        # Vertical scale for the oscilloscope in V/div (500 mV/div)
@@ -205,10 +273,15 @@ def bode_plot():
     # osc.timeout = 10000
     # osc.write(':AUToscale')
 
-    # Set the oscilloscope to AC coupling and configure the channel.
-    osc.write(':CHAN1:COUP AC')  
-    osc.write(f':CHAN1:SCAL {scope_v_per_div}')   
-    osc.write(f':TRIGger:EDGE:LEV {scope_trigger_level}')
+    # RIGOL: Set the oscilloscope to AC coupling and configure the channel.
+    # osc.write(':CHAN1:COUP AC')  
+    # osc.write(f':CHAN1:SCAL {scope_v_per_div}')   
+    # osc.write(f':TRIGger:EDGE:LEV {scope_trigger_level}')
+
+    # SIGLENT: Set the oscilloscope to AC coupling and configure the channel.
+    osc.write('C1:CPL A1M')  
+    osc.write(f'C1:VDIV {scope_v_per_div}V')   
+    osc.write(f'C1:TRIG_LEVEL {scope_trigger_level}V')
 
     # Calculate number of decades and points to collect per decade
     decades = np.log10(end_freq) - np.log10(start_freq)
@@ -226,6 +299,7 @@ def bode_plot():
         print(f'Frequency: {freq:.2f} Hz, ',end='', flush=True)
 
         # -------------------------------------------------------------------------------------
+        # RIGOL. Not modified for Siglent.
         # Version 1: Capturing with a 200 ms delay to allow settling time
         # TODO: fix horizontal scale based on frequency - also doesn't have the retry logic
         # -------------------------------------------------------------------------------------
@@ -236,6 +310,7 @@ def bode_plot():
         # vpp = float(osc.query(':MEAS:ITEM? VPP,CHAN1'))  # Read the Vpp measurement
 
         # -------------------------------------------------------------------------------------
+        # RIGOL. Not modified for Siglent.
         # Version 2: Taking multiple measurements and make sure they're withing 5% of each other.
         # TODO: fix horizontal scale based on frequency - retry logic below is better.
         # -------------------------------------------------------------------------------------
@@ -262,25 +337,67 @@ def bode_plot():
         # Version 3: Capturing with single acquisition mode. This is the fastest.
         # -------------------------------------------------------------------------------------
         horizontal_scale = max(10/freq, 100e-6)
-        osc.write(f":TIM:SCAL {horizontal_scale}")
-        actual_horizontal_scale = float(osc.query(":TIM:SCAL?"))
-        osc.write("ACQ:TYPE NORM")  # Normal acquisition
-        osc.write("SING")           # Single acquisition
-        time.sleep(0.1)             # Allow measurement to settle. This reduces bad readings.
-        osc.write(':MEAS:CLEAR')    # Clear previous measurements
 
-        # Take multiple Vpp measurements and check for validity
+        # RIGOL: Set horizontal scale
+        # osc.write(f":TIM:SCAL {horizontal_scale}")
+        # actual_horizontal_scale = float(osc.query(":TIM:SCAL?"))
+        # osc.write("ACQ:TYPE NORM")  # Normal acquisition
+        # osc.write("SING")           # Single acquisition
+        # time.sleep(0.1)             # Allow measurement to settle. This reduces bad readings.
+        # osc.write(':MEAS:CLEAR')    # Clear previous measurements
+
+        # Siglent: Set horizontal scale
+        osc.write(f"TDIV {horizontal_scale}")
+        tdiv_response = osc.query("TDIV?")
+        tdiv_response = tdiv_response.strip() # Remove /n from end
+        actual_horizontal_scale = float(tdiv_response.rstrip('S'))  # Remove 'S' and convert to float
+        osc.write("ACQW SAMPLING")  # Normal acquisition
+        osc.write("ARM")            # Single acquisition
+        time.sleep(0.1)             # Allow measurement to settle. This reduces bad readings.
+        osc.write('PARAMETER_CLR')  # Clear previous measurements
+
+        # RIGOL:Take multiple Vpp measurements and check for validity
+        # max_attempts = 5
+        # vpp = None
+        # for attempt in range(max_attempts):
+        #     while True:
+        #         status = osc.query("TRIG:STAT?").strip()
+        #         if status == "STOP":
+        #             break
+        #         time.sleep(0.05)
+        #     try:
+        #         vpp_candidate = float(osc.query(':MEAS:ITEM? VPP,CHAN1'))
+        #     except Exception:
+        #         vpp_candidate = 0.0
+        #     # Check for obviously erroneous values (zero, negative, or unreasonably high)
+        #     if vpp_candidate > 0 and vpp_candidate < error_check_max_gain * vpp_input:
+        #         vpp = vpp_candidate
+        #         break
+        #     else:
+        #         print(f"Warning: Invalid Vpp measurement ({vpp_candidate}), retrying...")
+        #         time.sleep(0.1)
+        #         osc.write("SING")
+        #         time.sleep(0.1)
+        # if vpp is None:
+        #     print("Warning: Could not get valid Vpp measurement, setting to 0")
+        #     vpp = 0.0
+
+        # Siglent: Take multiple Vpp measurements and check for validity
         max_attempts = 5
         vpp = None
         for attempt in range(max_attempts):
             while True:
                 status = osc.query("TRIG:STAT?").strip()
-                if status == "STOP":
+                if status == "Stop":
                     break
                 time.sleep(0.05)
             try:
-                vpp_candidate = float(osc.query(':MEAS:ITEM? VPP,CHAN1'))
+                # String format looks like this: 'C1:PAVA PKPK,2.34E+00V\n'
+                pkpk_str = osc.query('C1:PAVA? PKPK')
+                pkpk_str = pkpk_str.strip()  # Remove \n
+                vpp_candidate = float(pkpk_str.split(',')[1].rstrip('V'))  # Remove 'V' and convert to float
             except Exception:
+                print("Exception reading Vpp")
                 vpp_candidate = 0.0
             # Check for obviously erroneous values (zero, negative, or unreasonably high)
             if vpp_candidate > 0 and vpp_candidate < error_check_max_gain * vpp_input:
@@ -289,7 +406,7 @@ def bode_plot():
             else:
                 print(f"Warning: Invalid Vpp measurement ({vpp_candidate}), retrying...")
                 time.sleep(0.1)
-                osc.write("SING")
+                osc.write("ARM")
                 time.sleep(0.1)
         if vpp is None:
             print("Warning: Could not get valid Vpp measurement, setting to 0")
@@ -303,7 +420,7 @@ def bode_plot():
         print(f'Horizontal Scale: {actual_horizontal_scale}, Vpp Measurement: {vpp} V')
     
     # Close the instrument connections
-    dmm.close()
+    # dmm.close()
     pwr.close()
     wfg.close()
     osc.close()
@@ -369,6 +486,8 @@ def main():
     # list_instruments()
 
     # sample_instrument_commands()
+
+    # sample_siglent_commands()
 
     # bode_plot_freq_check()
 
