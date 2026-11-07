@@ -16,6 +16,18 @@ Current equipment list supported:
 
     Power Supply: Keysight E36234A
 
+## SCPI REPL
+
+scpi_repl.py is an interactive prompt for sending SCPI commands to an instrument and reading its responses. Lines that contain a `?` are sent as queries and the response is printed. Other lines are plain writes. REPL commands start with `/`:
+
+    /list [-q]               List VISA instruments on the network (-q skips the *IDN? lookup)
+    /connect <n|resource>    Connect by table number, VISA resource string, IP (INSTR), or IP:port (SOCKET)
+    /disconnect              Close the connection
+    /scan [subnet] [ports]   Probe the subnet for raw-socket SCPI ports (default 5025, 5555, 5024)
+    /devices, /timeout, /read, /menu, /quit
+
+The socket scan finds instruments that VISA discovery doesn't advertise and adds them to the device table as `TCPIP::<ip>::<port>::SOCKET`. Like bode.py, the REPL uses the `@py` backend for discovery. To connect, it tries NI-VISA (`@ivi`) first and falls back to `@py`. Use `--backend` to force one backend. Command history is saved to `~/.scpi_repl_history`.
+
 ## Bode Plots
 
 bode.py produces a Bode Plot. Here's an example of a Common Emitter BJT amplifier circuit and its Bode Plot. 
